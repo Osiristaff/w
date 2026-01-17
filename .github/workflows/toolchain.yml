@@ -9,7 +9,7 @@ on:
       build_target:
         description: "Build target"
         required: false
-        default: "all-64bit"
+        default: "64bit-v3"
         type: choice
         options:
         - 32bit
@@ -92,7 +92,7 @@ jobs:
     needs: [params]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/archlinux/archlinux:base-devel
+      image: cachyos/cachyos-v3:latest
     continue-on-error: true
     strategy:
       matrix: ${{ fromJson(needs.params.outputs.matrix) }}
@@ -100,9 +100,6 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-          sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" | sudo tee -a /etc/pacman.conf >/dev/null
-          sudo pacman-key --init
-          sudo pacman-key --populate archlinux
           sudo pacman -Syu --noconfirm
           sudo pacman -S --noconfirm --needed git ninja cmake meson wget mimalloc 7zip unzip
           git config --global user.name "github-actions[bot]"
@@ -115,7 +112,7 @@ jobs:
       - name: Checkout toolchain
         uses: actions/checkout@v6
         with:
-          repository: shinchiro/mpv-winbuild-cmake
+          repository: Osiristaff/mpv-winbuild-cmake
           path: mpv-winbuild-cmake
           fetch-depth: 0
 
@@ -176,7 +173,7 @@ jobs:
     needs: [params]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/archlinux/archlinux:base-devel
+      image: cachyos/cachyos-v3:latest
     continue-on-error: true
 
     steps:
@@ -285,7 +282,7 @@ jobs:
     if: ${{ always() && inputs.compiler =='clang' }}
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/archlinux/archlinux:base-devel
+      image: cachyos/cachyos-v3:latest
     continue-on-error: true
 
     steps:
