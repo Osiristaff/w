@@ -1,0 +1,269 @@
+From 1e58a6b49f193491a0cdde7b63448bebd9b1e9ea Mon Sep 17 00:00:00 2001
+From: Osiristaff <173200053+Osiristaff@users.noreply.github.com>
+Date: Fri, 27 Mar 2026 00:02:49 +0800
+Subject: [PATCH] cc
+
+---
+ packages/ffmpeg.cmake   | 39 +++++++--------------------------------
+ packages/libsixel.cmake | 24 +++++++++++++-----------
+ packages/mpv.cmake      |  9 ---------
+ packages/openssl.cmake  |  6 +-----
+ 4 files changed, 21 insertions(+), 57 deletions(-)
+
+diff --git a/packages/ffmpeg.cmake b/packages/ffmpeg.cmake
+index 333905b1..963388ce 100644
+--- a/packages/ffmpeg.cmake
++++ b/packages/ffmpeg.cmake
+@@ -10,39 +10,30 @@ ExternalProject_Add(ffmpeg
+         libsrt
+         libass
+         libbluray
+-        libdvdnav
+-        libdvdread
+-        libmodplug
+         libpng
+-        libwebp
+         libzimg
+         libmysofa
+         fontconfig
+         harfbuzz
+         opus
+-        speex
+-        vorbis
+         libxml2
+         libvpl
+         libjxl
+         shaderc
+         libplacebo
+         libaribcaption
+-        aom
+         svtav1
+         dav1d
+         vapoursynth
+         rubberband
+         libva
+         openal-soft
+-        fdk-aac
+         opencl
+         vulkan
+         game-music-emu
+         liblc3
+         libvidstab
+         frei0r
+-        codec2
+         xz
+         libsdl2
+         whisper
+@@ -61,41 +52,35 @@ ExternalProject_Add(ffmpeg
+         --target-os=mingw64
+         --pkg-config-flags=--static
+         --disable-autodetect
+-        --disable-decoder=libaom_av1,aac_fixed,ac3_fixed
+         --disable-doc
+-        --disable-encoder=ac3_fixed,mp2fixed
+         --disable-ffplay
+         --disable-ffprobe
+         --disable-inline-asm
+-        --disable-schannel
+         --disable-stripping
+         --disable-symver
+         --disable-unstable
++        --enable-gpl
++        --enable-version3
++        --enable-cross-compile
++        --enable-hardcoded-tables
++        --enable-response-files
++        --enable-runtime-cpudetect
++        --enable-w32threads
+         --enable-amf
+         --enable-avisynth
+         --enable-bzlib
+-        --enable-cross-compile
+         --enable-cuda-llvm
+         --enable-cuvid
+-        --enable-cuvid
+         --enable-d3d11va
+         --enable-d3d12va
+-        --enable-dxva2
+         --enable-ffnvcodec
+         --enable-frei0r
+-        --enable-gpl
+-        --enable-hardcoded-tables
+         --enable-iconv
+         --enable-lcms2
+-        --enable-libaom
+         --enable-libaribcaption
+         --enable-libass
+         --enable-libbluray
+-        --enable-libcodec2
+         --enable-libdav1d
+-        --enable-libdvdnav
+-        --enable-libdvdread
+-        --enable-libfdk-aac
+         --enable-libfontconfig
+         --enable-libfreetype
+         --enable-libfribidi
+@@ -103,39 +88,29 @@ ExternalProject_Add(ffmpeg
+         --enable-libharfbuzz
+         --enable-libjxl
+         --enable-liblc3
+-        --enable-libmodplug
+         --enable-libmysofa
+         --enable-libopus
+         --enable-libplacebo
+         --enable-librubberband
+         --enable-libshaderc
+-        --enable-libspeex
+         --enable-libsrt
+         --enable-libssh
+         --enable-libsvtav1
+         --enable-libvidstab
+-        --enable-libvorbis
+         --enable-libvpl
+-        --enable-libwebp
+         --enable-libxml2
+         --enable-libzimg
+         --enable-lzma
+         --enable-mediafoundation
+-        --enable-nonfree
+         --enable-nvdec
+         --enable-nvenc
+         --enable-openal
+         --enable-opencl
+-        --enable-opengl
+         --enable-openssl
+-        --enable-response-files
+-        --enable-runtime-cpudetect
+         --enable-sdl2
+         --enable-vaapi
+         --enable-vapoursynth
+-        --enable-version3
+         --enable-vulkan
+-        --enable-w32threads
+         --enable-whisper
+         --enable-zlib
+         --extra-libs=-lc++
+diff --git a/packages/libsixel.cmake b/packages/libsixel.cmake
+index fe0e607e..a9cae25f 100644
+--- a/packages/libsixel.cmake
++++ b/packages/libsixel.cmake
+@@ -1,5 +1,5 @@
+ ExternalProject_Add(libsixel
+-    GIT_REPOSITORY https://github.com/libsixel/libsixel.git
++    GIT_REPOSITORY https://github.com/saitoha/libsixel.git
+     SOURCE_DIR ${SOURCE_LOCATION}
+     GIT_CLONE_FLAGS "--depth=1 --sparse --filter=tree:0"
+     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !images"
+@@ -8,20 +8,22 @@ ExternalProject_Add(libsixel
+     UPDATE_COMMAND ""
+     CONFIGURE_ENVIRONMENT_MODIFICATION
+         _IS_CONFIGURE=set:1
+-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR> <BINARY_DIR>/source/${package}
+-    COMMAND ${EXEC} meson setup --reconfigure <BINARY_DIR>/build <BINARY_DIR>/source/${package}
+-        ${meson_conf_args}
+-        -Djpeg=disabled
+-        -Dpng=disabled
+-        -Dimg2sixel=disabled
+-        -Dsixel2png=disabled
+-        "-Dc_args='-Wno-implicit-function-declaration'"
++    CONFIGURE_COMMAND ${EXEC} <SOURCE_DIR>/configure
++        --host=${TARGET_ARCH}
++        --prefix=${MINGW_INSTALL_PREFIX}
++        --with-jpeg=no
++        --with-png=no
++        --disable-img2sixel
++        --disable-sixel2png
++        --disable-python
++        --disable-shared
++        --enable-static
+     BUILD_ENVIRONMENT_MODIFICATION
+         _PACKAGE_NAME=set:${package}
+         _BINARY_DIR=set:<BINARY_DIR>
+         _FORCE_HIDE_DLLEXPORT=set:1
+-    BUILD_COMMAND ${EXEC} meson install -C <BINARY_DIR>/build --only-changed --tags devel
+-    INSTALL_COMMAND ""
++    BUILD_COMMAND ${MAKE}
++    INSTALL_COMMAND ${MAKE} install
+     LOG_DOWNLOAD 1 LOG_UPDATE 1 LOG_PATCH 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+ )
+ 
+diff --git a/packages/mpv.cmake b/packages/mpv.cmake
+index 30a8bca6..9e1ab5c7 100644
+--- a/packages/mpv.cmake
++++ b/packages/mpv.cmake
+@@ -8,11 +8,6 @@ if(NOT DEFINED CMAKE_SCRIPT_MODE_FILE)
+         -Dcuda-interop=enabled
+         -Dd3d-hwaccel=enabled
+         -Dd3d11=enabled
+-        -Dd3d9-hwaccel=enabled
+-        -Ddirect3d=enabled
+-        -Ddvdnav=enabled
+-        -Degl-angle=enabled
+-        -Dgl-dxinterop-d3d9=enabled
+         -Dgl-dxinterop=enabled
+         -Dgl-win32=enabled
+         -Dgl=enabled
+@@ -45,15 +40,11 @@ if(NOT DEFINED CMAKE_SCRIPT_MODE_FILE)
+     )
+     ExternalProject_Add(mpv
+         DEPENDS
+-            angle-headers
+             nvcodec-headers
+             ffmpeg
+-            fribidi
+             lcms2
+             libarchive
+             libass
+-            libdvdnav
+-            libdvdread
+             libiconv
+             libjpeg
+             libpng
+diff --git a/packages/openssl.cmake b/packages/openssl.cmake
+index 830166f4..70ab5fbd 100644
+--- a/packages/openssl.cmake
++++ b/packages/openssl.cmake
+@@ -8,7 +8,6 @@ ExternalProject_Add(openssl
+     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
+     GIT_PROGRESS TRUE
+     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !test"
+-    GIT_RESET 4f735758bdb3e6d5f33b6fbf4d60bbb4ea896907
+     GIT_SUBMODULES ""
+     GIT_CONFIG "submodule.recurse=false"
+     UPDATE_COMMAND ""
+@@ -16,6 +15,7 @@ ExternalProject_Add(openssl
+         _IS_CONFIGURE=set:1
+     CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR> <BINARY_DIR>/source/${package}
+     COMMAND ${EXEC} ${GIT_EXECUTABLE} -C <BINARY_DIR>/source/${package} am --3way ${CMAKE_CURRENT_SOURCE_DIR}/openssl-*.patch
++    COMMAND mkdir -p apps/include
+     COMMAND ${EXEC} <BINARY_DIR>/source/${package}/Configure
+         CFLAGS=-DNO_INTERLOCKEDOR64
+         --cross-compile-prefix=${TARGET_ARCH}-
+@@ -30,19 +30,16 @@ ExternalProject_Add(openssl
+         no-tls1_1-method
+         no-dtls1-method
+         no-tls1-method
+-        no-ssl3-method
+         no-makedepend
+         enable-brotli
+         no-whirlpool
+         no-filenames
+         no-camellia
+         enable-zstd
+-        no-capieng
+         no-shared
+         no-rmd160
+         no-module
+         no-legacy
+-        no-engine
+         no-tls1_2
+         no-tls1_1
+         no-dtls1
+@@ -51,7 +48,6 @@ ExternalProject_Add(openssl
+         no-docs
+         no-apps
+         no-ocsp
+-        no-ssl3
+         no-tls1
+         no-cmac
+         no-mdc2
